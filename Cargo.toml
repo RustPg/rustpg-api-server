@@ -1,0 +1,7 @@
+[package]
+name = "rustpg-api-server"
+version = "0.1.0"
+authors = ["rustpg"]
+
+[dependencies]
+clap = "2.24.1"
