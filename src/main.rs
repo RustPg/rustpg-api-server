@@ -1,8 +1,10 @@
 extern crate clap;
 extern crate rustc_serialize;
 
+mod config;
 mod errors;
 
+use config::Config;
 use clap::{App, AppSettings, SubCommand, Arg};
 
 fn main() {
@@ -22,8 +24,11 @@ fn main() {
 
     match menu.subcommand() {
         ("run", Some(cmd)) => {
-            // todo
-        }
+            match Config::from_file(cmd.value_of("config")) {
+                Ok(cfg) => println!("{:?}", cfg),
+                Err(e) => println!("{:?}", e),
+            }
+        },
         _ => {
             println!("{}", menu.usage());
         }

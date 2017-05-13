@@ -6,6 +6,8 @@ pub struct CliError {
     msg: String,
 }
 
+pub type CliResult<T> = Result<T, CliError>;
+
 impl CliError {
     pub fn new<T: Into<String>>(msg: T) -> CliError {
         CliError { msg: msg.into() }
