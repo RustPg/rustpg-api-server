@@ -18,9 +18,9 @@ enum RawConfig {
 
 #[derive(Debug)]
 pub struct Config {
-    bind_address: String,
-    bind_port: String,
-    database_url: String,
+    pub bind_address: String,
+    pub bind_port: String,
+    pub database_url: String,
 }
 
 const CONFIG_FILES: [&'static str; 1] = ["config.json"];
@@ -47,8 +47,8 @@ impl Config {
         }?;
 
         Ok(Config {
-            bind_address: raw_conf.bind_address.unwrap_or("0.0.0.0".to_owned()),
-            bind_port: raw_conf.bind_port.unwrap_or("".to_owned()),
+            bind_address: raw_conf.bind_address.unwrap_or("127.0.0.1".to_owned()),
+            bind_port: raw_conf.bind_port.unwrap_or("5050".to_owned()),
             database_url: raw_conf.database_url,
         })
     }
@@ -65,5 +65,56 @@ impl Config {
         let _ = src.read_to_string(&mut buf)?;
 
         Ok(buf)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::RawConfig;
+    use rustc_serialize::json;
+
+    #[test]
+    fn decode_v1_config() {
+        let cfg = json::decode::<RawConfig>(r#"{
+            "variant": "V1",
+            "fields": [{
+                "bind_address": "0.0.0.0",
+                "bind_port": "1234",
+                "database_url": "https"
+            }]
+        }"#).unwrap();
+
+        let RawConfig::V1(cfg_v1) = cfg;
+
+        assert_eq!(cfg_v1.bind_address, Some("0.0.0.0".to_owned()));
+        assert_eq!(cfg_v1.bind_port, Some("1234".to_owned()));
+        assert_eq!(cfg_v1.database_url, "https".to_owned());
+    }
+
+    #[test]
+    #[should_panic]
+    fn decode_v1_config_error() {
+        let cfg = json::decode::<RawConfig>(r#"{
+            "variant": "V1",
+            "fields": [{
+                "bind_address": "0.0.0.0",
+                "bind_port": "1234",
+                "database_urlr": "https"
+            }]
+        }"#).unwrap();
+    }
+
+    #[test]
+    fn default_values_config() {
+        let RawConfig::V1(cfg) = json::decode::<RawConfig>(r#"{
+            "variant": "V1",
+            "fields": [{
+                "database_url": "https"
+            }]
+        }"#).unwrap();
+
+        assert_eq!(cfg.bind_address, None);
+        assert_eq!(cfg.bind_port, None);
+        assert_eq!(cfg.database_url, "https".to_owned());
     }
 }
